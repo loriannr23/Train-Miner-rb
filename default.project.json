@@ -1,0 +1,29 @@
+{
+  "name": "TrainMiner",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "TrainMiner": {
+        "$className": "Folder",
+        "Shared": {
+          "$path": "src/shared"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "TrainMinerServer": {
+        "$path": "src/server/TrainMinerServer.server.luau"
+      },
+      "TrainLoop": {
+        "$path": "src/server/TrainLoop.server.luau"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "TrainMinerClient": {
+          "$path": "src/client/TrainMinerClient.client.luau"
+        }
+      }
+    }
+  }
+}

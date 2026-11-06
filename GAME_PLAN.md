@@ -195,7 +195,7 @@ Ein Kameraknopf öffnet eine gut lesbare Auswahl. Die gewählte Kamera wird loka
 - Fabriken brauchen eine erkennbare Bewegung: Sägeblatt dreht, Ofen glüht, Förderband bewegt Kisten. Animationen kurz und sparsam.
 - Bei vollem Wagon wird die Ladung als Modell sichtbar; bei einer Lieferung wandern Waren ins Lager.
 
-### Modellliste für einen ersten spielbaren Stand
+### Eigene Modellbibliothek und erster Spielstand
 
 - Lokomotive mit eigenem Frontmodul.
 - Transportwagen, Holz-Wagon und Stein-Wagon.
@@ -205,7 +205,9 @@ Ein Kameraknopf öffnet eine gut lesbare Auswahl. Die gewählte Kamera wird loka
 - Zwei bis drei Hausmodelle sowie Baugerüst und Baustellenschild.
 - Symbole für Holz, Stein, Bretter, Münzen und jeden Upgrade-Typ.
 
-Zuerst bauen wir mit einfachen Studio-Parts und klaren Farben. Aufwendige Meshes kommen erst, wenn Größe und Silhouette im Spiel feststehen. So werden Modelle nicht mehrfach aufwendig neu gebaut.
+Für den ersten Stand gibt es eine eigene Blender-Bibliothek mit 19 exportierten FBX-Modellen: drei Bodenkacheln, fünf Baumstadien, drei Felsstadien, zwei Kristallstadien, Sägewerk, Bank, Fitnessstudio, Casino, Lok und Güterwagen. `src/studio/build_starter_scene.luau` skaliert die importierten Modelle auf das 10-Stud-Raster, weist ihre Farbpalette zu und baut daraus die Startlandschaft. Die Blender-Quelldatei und das Exportskript bleiben versioniert, damit Formen und Proportionen überarbeitet werden können.
+
+Jede Kachel kann ein Ressourcenobjekt tragen. Der erste Weltabschnitt setzt 16 aktive Holz-, Stein- und Kristallknoten entlang der Strecke ein; zusätzliche Waldobjekte füllen den Rand der Fläche. Die aktive Ressource speichert Tile-Koordinate, Typ, Gesundheit und Schadensstufe. Weitere Kacheln lassen sich über dieselbe Node-Vorlage ergänzen.
 
 ### Klang
 
@@ -241,18 +243,22 @@ Die Werkzeuge ergänzen sich:
 
 Empfohlener Ablauf: Studio bleibt das Werkzeug fürs Bauen und fürs Spielen. Code und Konfiguration liegen lokal in Git und werden mit Rojo zu Studio synchronisiert. Große Szenen und Assets werden bewusst in Studio gepflegt, statt jedes Detail zwanghaft als Code abzubilden. MCP ergänzt diesen Ablauf, ersetzt aber weder Studio noch die Git-Historie.
 
-**Aktueller Projektzustand:** Der Ordner ist leer, und derzeit ist keine Roblox-Studio-Instanz mit MCP verbunden. Deshalb ist noch kein Place geändert. Der nächste technische Schritt wäre, Studio zu installieren/öffnen, ein leeres Erlebnis anzulegen und daneben ein privates Git-Repository mit einem Rojo-Grundgerüst einzurichten.
+**Aktueller Projektzustand:** Das Repository enthält `default.project.json`, aktuelle Luau-Quellen für Server, Client und gemeinsame Konfiguration, eine Blender-Quelldatei mit 19 exportierten Modellen sowie ausgewählte OGG-Dateien. `Train-Miner.rbxl` enthält den ersten generierten Weltabschnitt mit 99 Bodenkacheln, Rundgleis, 16 aktiven Ressourcen, Walddeko, Verkaufsdepot, vier Bauplätzen und importierten Modellen. Der Builder enthält bereits die jüngste Beschriftungsbereinigung und das animierte Säge-Modul; diese Updates sowie die aktuellen Gameplay-Skripte müssen bei der nächsten Studio-Sitzung noch synchronisiert werden. Die Audio-Asset-IDs müssen ebenfalls noch eingetragen werden.
 
 ### Grobe Code-Aufteilung
 
 ```text
+Assets/
+  Blender/                             Blender-Projekt, Exportskript, FBX und Vorschau
+  Audio/Kenney/                        CC0-OGG-Clips plus Lizenzdateien
 src/
-  ReplicatedStorage/Shared/Config/     Ressourcen, Rezepte, Gebäude, Upgrades
-  ServerScriptService/Services/        Spielerdaten, Zug, Fabriken, Bauaufträge
-  StarterPlayer/StarterPlayerScripts/  Kamera, Eingaben, HUD-Steuerung
-  StarterGui/                          UI-Vorlagen
-docs/
-  GAME_PLAN.md
+  shared/GameConfig.luau               Ressourcen, Saw-Tiers, Preise und Gebäude
+  server/TrainMinerServer.server.luau  Speichern, Ernten, Verkauf, RNG, Bauen
+  server/TrainLoop.server.luau         Serverzug, Wegpunkte und Sägeanimation
+  client/TrainMinerClient.client.luau  HUD, Kameras, Trefferpartikel und Sound
+  studio/                              Weltaufbau und Audio-ID-Setup
+default.project.json                   Rojo-Mapping
+GAME_PLAN.md                           Gamedesign und aktueller Stand
 ```
 
 Wichtige Spielregeln und Preise bleiben in Konfigurationsmodulen, damit wir sie an einer Stelle ändern können. Daten-Speicherung und Käufe bleiben serverseitig.
@@ -266,6 +272,8 @@ Wichtige Spielregeln und Preise bleiben in Konfigurationsmodulen, damit wir sie 
 - Zug fährt auf vorgegebenen Wegpunkten, ohne Schienenphysik.
 - Ein Ressourcenobjekt wird erkannt und dem Zug zugerechnet.
 
+**Umgesetzt als Quellstand:** Tile-Raster, eigene Terrain-/Ressourcenmodelle, Rundgleis und Zugmodell. Die Spielschleife ist im Code angelegt; Studio-seitige Modellimporte und ein echter Playtest sind noch offen.
+
 ### Phase B — erste vollständige Spielschleife
 
 - Holz und Stein sammeln, entladen, verkaufen und als Lagerbestand anzeigen.
@@ -273,6 +281,8 @@ Wichtige Spielregeln und Preise bleiben in Konfigurationsmodulen, damit wir sie 
 - Sägerei verarbeitet Holz zu Brettern.
 - Erster Bauauftrag verbraucht Bretter und Stein für ein Lager oder eine Werkstatt.
 - Gespeicherter Fortschritt.
+
+**Umgesetzt als Quellstand:** HP-Schadensstufen, zweiter Vorbeifahrts-Sammelvorgang, Verkauf, XP-Level, begrenzte RNG-Sägen, Level-Freischaltungen, Merge, Best-Saw-Equip und Sägewerk (3 Holz → 1 Brett). Gebäudekosten und Boni sind serverseitig hinterlegt.
 
 ### Phase C — Gebäude und Gebiete
 
@@ -288,6 +298,8 @@ Wichtige Spielregeln und Preise bleiben in Konfigurationsmodulen, damit wir sie 
 - Besuchbare Grundstücke und ein einfaches Helferereignis.
 - Sound, Effekte und kosmetische Zugoptionen ergänzen.
 
+**Angelegt:** Kameraumschalter für Diorama/Third/First Person, Querformat-Ziel, clientseitige Treffer-/Bruchpartikel und Routing für die Kenney-Clips. Sound-Dateien sind im Repo, benötigen nach dem Import in Roblox noch ihre Audio-Asset-IDs.
+
 ## 16. Noch offene gemeinsame Entscheidungen
 
 Diese Punkte können wir ändern, bevor die Details festgelegt werden:
@@ -296,7 +308,7 @@ Diese Punkte können wir ändern, bevor die Details festgelegt werden:
 - **Bauen:** Bauplätze mit Raster (schnell und übersichtlich) oder später freie Platzierung?
 - **Zug:** vollständig automatisch fahren oder eine optionale Taste für einen kurzen Turbo?
 - **Mehrspieler:** nur Grundstücke besuchen oder früh kleine Koop-Aufträge?
-- **Optik:** eher kantiges Low-Poly-Spielzeug oder rundere, weichere Cartoon-Modelle?
+- **Optik:** entschieden: farbenfrohe Low-Poly-Spielzeugbahn mit weichen Kanten, sattgrüner Landschaft und klaren Akzentfarben.
 - **Monetarisierung:** kostenlos ohne Werbung; kosmetische Gamepasses später nur, falls gewünscht.
 
 ## Referenzen
